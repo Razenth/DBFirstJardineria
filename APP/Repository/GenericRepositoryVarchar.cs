@@ -10,11 +10,11 @@ using Persistence.Data;
 
 namespace APP.Repository
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+    public class GenericRepositoryVarchar<T> : IGenericRepositoryVarchar<T> where T : BaseEntityVarchar
     {
         private readonly GardenContext _context;
 
-        public GenericRepository(GardenContext context)
+        public GenericRepositoryVarchar(GardenContext context)
         {
             _context = context;
         }

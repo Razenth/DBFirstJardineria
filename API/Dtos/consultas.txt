@@ -1,0 +1,1189 @@
+// Devuelve un listado con el código de oficina y la ciudad donde hay oficinas.
+[HttpGet("OficinaAndCity")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> OficinaAndCity()
+{
+    var oficinas = await _context.Oficinas
+        .Select(o => new { o.Id, o.Ciudad })
+        .ToListAsync();
+
+    if (oficinas == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(oficinas);
+}
+
+// Devuelve un listado con la ciudad y el teléfono de las oficinas de España.
+[HttpGet("CityAndPhoneInSpain")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> CityAndPhoneInSpain()
+{
+    var result = await _context.Oficinas
+        .Where(o => o.Pais == "España")
+        .Select(o => new { o.Ciudad, o.Telefono })
+        .ToListAsync();
+
+    if (result == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(result);
+}
+
+// Devuelve un listado con el nombre, apellidos y email de los empleados cuyo jefe tiene un código de jefe igual a 7
+
+[HttpGet("InfoWithBossId7")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> InfoWithBossId7()
+{
+    var result = await _context.Empleados
+        .Where(e => e.CodigoJefe == 7)
+        .Select(e => new { nombre = $"{e.Nombre} {e.Apellido1} {e.Apellido2}", e.Email})
+        .ToListAsync();
+
+    if (result == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(result);
+}
+
+// 4. Devuelve el nombre del puesto, nombre, apellidos y email del jefe de la empresa.
+[HttpGet("InfoBoss")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> InfoBoss()
+{
+    var results = await _context.Empleados
+.Where(e => e.CodigoJefe == null)
+.Select(e => new { nombre = $"{e.Nombre} {e.Apellido1}", e.Email })
+.FirstOrDefaultAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 5. Devuelve un listado con el nombre, apellidos y puesto de aquellos empleados que no sean representantes de ventas.
+[HttpGet("NotSellsRepresentEmployee")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> NotSellsRepresentEmployee()
+{
+var results = await _context.Empleados
+.Where(e => e.Puesto != "Representante Ventas")
+.Select(e => new { nombre = $"{e.Nombre} {e.Apellido1} {e.Apellido2}", e.Puesto })
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 6. Devuelve un listado con el nombre de los todos los clientes españoles.
+[HttpGet("SpainCustomers")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> SpainCustomers()
+{
+var results = await _context.Clientes
+.Where(c => c.Pais == "Spain")
+.Select(c => new { c.NombreCliente, c.Pais })
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 7. Devuelve un listado con los distintos estados por los que puede pasar un pedido.
+[HttpGet("OrderStatements")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> OrderStatements()
+{
+var results = await _context.Pedidos
+.Select(p => p.Estado)
+.Distinct()
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 8. Devuelve un listado con el código de cliente de aquellos clientes que realizaron algún pago en 2008.
+[HttpGet("CustomerPays2008")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> GetQuery()
+{
+var results = await _context.Pagos
+.Where(p => p.FechaPago.Year == 2008)
+.Select(p => p.Id)
+.Distinct()
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 9. Devuelve un listado con el código de pedido, código de cliente, fecha esperada y fecha de entrega de los pedidos que no han sido entregados a tiempo.
+[HttpGet("OffTimeDeliver")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> OffTimeDeliver()
+{
+var results = await _context.Pedidos
+.Where(p => p.FechaEntrega > p.FechaEsperada || p.FechaEntrega == null)
+.OrderBy(p => p.FechaEsperada)
+.Select(p => new { p.Id, p.CodigoCliente, p.FechaEsperada, p.FechaEntrega })
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 10. Devuelve un listado con el código de pedido, código de cliente, fecha esperada y fecha de entrega de los pedidos cuya fecha de entrega ha sido al menos dos días antes de la fecha esperada.
+[HttpGet("2DaysBeforeDeliver")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+
+public async Task<ActionResult<string>> 2DaysBeforeDeliver()
+{
+var results = await _context.Pedidos
+.Where(p => p.FechaEntrega.HasValue && p.FechaEntrega < p.FechaEsperada.AddDays(-2))
+.Select(p => new { p.Id, p.CodigoCliente, p.FechaEsperada, p.FechaEntrega })
+.ToListAsync();
+
+    if (results == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(results);
+}
+
+// 11. Devuelve un listado de todos los pedidos que fueron rechazados en 2009.
+        [HttpGet("RejectOrders")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> RejectOrders()
+        {
+var results = await _context.Pedidos
+    .Where(p => p.Estado == "Rechazado" && p.FechaPedido.Year == 2009)
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 12. Devuelve un listado de todos los pedidos que han sido entregados en el mes de enero de cualquier año.
+        [HttpGet("AllOrdersDeliveredInJanuary")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> AllOrdersDeliveredInJanuary()
+        {
+var results = await _context.Pedidos
+    .Where(p => p.Estado == "Entregado" && p.FechaEntrega.HasValue && p.FechaEntrega.Value.Month == 1)
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 13. Devuelve un listado con todos los pagos que se realizaron en el año 2008 mediante Paypal. Ordene el resultado de mayor a menor.
+        [HttpGet("FormPaymentBePayPal")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> FormPaymentBePayPal()
+        {
+var results = await _context.Pagos
+    .Where(p => p.FormaPago == "PayPal" && p.FechaPago.Year == 2008)
+    .OrderByDescending(p => p.Total)
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 14. Devuelve un listado con todas las formas de pago que aparecen en la tabla pago. Tenga en cuenta que no deben aparecer formas de pago repetidas.
+        [HttpGet("AllPaymentsForm")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> AllPaymentsForm()
+        {
+var results = await _context.Pagos
+    .Select(p => p.FormaPago)
+    .Distinct()
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 15. Devuelve un listado con todos los productos que pertenecen a la gama Ornamentales y que tienen más de 100 unidades en stock. El listado deberá estar ordenado por su precio de venta, mostrando en primer lugar los de mayor precio.
+        [HttpGet("ProductGammaOrnamentals")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> ProductGammaOrnamentals()
+        {
+var results = await _context.Productos
+    .Where(p => p.Gama == "Ornamentales" && p.CantidadEnStock > 100)
+    .OrderByDescending(p => p.PrecioVenta)
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 16. Devuelve un listado con todos los clientes que sean de la ciudad de Madrid y cuyo representante de ventas tenga el código de empleado 11 o 30.
+        [HttpGet("Employee11AndInMadrid")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> Employee11AndInMadrid()
+        {
+var results = await _context.Clientes
+    .Where(c => c.Ciudad == "Madrid" && (c.CodigoEmpleadoRepVentas == 11 || c.CodigoEmpleadoRepVentas == 30))
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+Consultas Multitabla ---------------------------------------------------
+
+// 1. Obtén un listado con el nombre de cada cliente y el nombre y apellido de su representante de ventas.
+        [HttpGet("CustomerAndEmployee")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerAndEmployee()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}" })
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 2. Muestra el nombre de los clientes que hayan realizado pagos junto con el nombre de sus representantes de ventas.
+        [HttpGet("CustomerWithPaymentsAndEmployee")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerWithPaymentsAndEmployee()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}" })
+    .GroupJoin(_context.Pagos,
+        ce => ce.Cliente,
+        p => p.IdNavigation.NombreCliente,
+        (ce, pagos) => new { ce.Cliente, ce.RepresentanteVentas, EstadoPago = pagos.Any() ? "Realizo pago" : "No hay pago" })
+    .Where(ce => ce.EstadoPago == "Realizo pago")
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 3. Muestra el nombre de los clientes que no hayan realizado pagos junto con el nombre de sus representantes de ventas.
+        [HttpGet("CustomerNotPay")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerNotPay()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}" })
+    .GroupJoin(_context.Pagos,
+        ce => ce.Cliente,
+        p => p.IdNavigation.NombreCliente,
+        (ce, pagos) => new { ce.Cliente, ce.RepresentanteVentas, EstadoPago = pagos.Any() ? "Realizo pago" : "No hay pago" })
+    .Where(ce => ce.EstadoPago == "No hay pago")
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 4. Devuelve el nombre de los clientes que han hecho pagos y el nombre de sus representantes junto con la ciudad de la oficina a la que pertenece el representante.
+        [HttpGet("CustomerWithPayEmployeeWithOffice")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerWithPayEmployeeWithOffice()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}", CodigoOficina = e.CodigoOficinaNavigation.Ciudad })
+    .GroupJoin(_context.Pagos,
+        ce => ce.Cliente,
+        p => p.IdNavigation.NombreCliente,
+        (ce, pagos) => new { ce.Cliente, ce.RepresentanteVentas, ce.CodigoOficina, EstadoPago = pagos.Any() ? "Realizo pago" : "No hay pago" })
+    .Where(ce => ce.EstadoPago == "Realizo pago")
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 5. Devuelve el nombre de los clientes que no hayan hecho pagos y el nombre de sus representantes junto con la ciudad de la oficina a la que pertenece el representante.
+        [HttpGet("CustomerWithNoPayEmployeeWithOffice")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerWithNoPayEmployeeWithOffice()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}", CodigoOficina = e.CodigoOficinaNavigation.Ciudad })
+    .GroupJoin(_context.Pagos,
+        ce => ce.Cliente,
+        p => p.IdNavigation.NombreCliente,
+        (ce, pagos) => new { ce.Cliente, ce.RepresentanteVentas, ce.CodigoOficina, EstadoPago = pagos.Any() ? "Realizo pago" : "No hay pago" })
+    .Where(ce => ce.EstadoPago == "No hay pago")
+    .ToListAsync();
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 6. Lista la dirección de las oficinas que tengan clientes en Fuenlabrada.
+        [HttpGet("OfficeAddresInCustomerFuenlabrada")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> OfficeAddresInCustomerFuenlabrada()
+        {
+var results = await _context.Empleados
+    .Where(e => e.Clientes.Any(c => c.Ciudad == "Fuenlabrada"))
+    .Select(e => $"{e.CodigoOficinaNavigation.LineaDireccion1} {e.CodigoOficinaNavigation.LineaDireccion2}")
+    .Distinct()
+    .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 7. Devuelve el nombre de los clientes y el nombre de sus representantes junto con la ciudad de la oficina a la que pertenece el representante.
+        [HttpGet("CustomerEmployeeAndOffice")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerEmployeeAndOffice()
+        {
+var results = await _context.Clientes
+    .Join(_context.Empleados,
+        c => c.CodigoEmpleadoRepVentas,
+        e => e.Id,
+        (c, e) => new { Cliente = c.NombreCliente, RepresentanteVentas = $"{e.Nombre} {e.Apellido1} {e.Apellido2}", CodigoOficina = e.CodigoOficina })
+    .Join(_context.Oficinas,
+        ce => ce.CodigoOficina,
+        o => o.Id,
+        (ce, o) => new { ce.Cliente, ce.RepresentanteVentas, CiudadOficina = o.Ciudad })
+    .Distinct()
+    .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 8. Devuelve un listado con el nombre de los empleados junto con el nombre de sus jefes.
+        [HttpGet("BossOfBoss")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> BossOfBoss()
+        {
+var results = await _context.Empleados
+    .Select(e => new
+    {
+        NombreEmpleado = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        NombreJefe = e.CodigoJefeNavigation != null ? $"{e.CodigoJefeNavigation.Nombre} {e.CodigoJefeNavigation.Apellido1} {e.CodigoJefeNavigation.Apellido2}" : "Sin jefe"
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 9. Devuelve un listado que muestre el nombre de cada empleados, el nombre de su jefe y el nombre del jefe de sus jefe.
+        [HttpGet("BossOfBossOfBoss")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> BossOfBossOfBoss()
+        {
+var results = await _context.Empleados
+    .Select(e => new
+    {
+        NombreEmpleado = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        NombreJefe = e.CodigoJefeNavigation != null ? $"{e.CodigoJefeNavigation.Nombre} {e.CodigoJefeNavigation.Apellido1} {e.CodigoJefeNavigation.Apellido2}" : "Sin jefe",
+        NombreJefeDelJefe = e.CodigoJefeNavigation != null && e.CodigoJefeNavigation.CodigoJefeNavigation != null ?
+            $"{e.CodigoJefeNavigation.CodigoJefeNavigation.Nombre} {e.CodigoJefeNavigation.CodigoJefeNavigation.Apellido1} {e.CodigoJefeNavigation.CodigoJefeNavigation.Apellido2}" : "Sin jefe del jefe"
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+    
+
+
+
+// 11. Devuelve un listado de las diferentes gamas de producto que ha comprado cada cliente.
+        [HttpGet("CustomersGammas")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersGammas()
+        {
+var results = await _context.Clientes
+    .Join(_context.Pedidos,
+        c => c.Id,
+        p => p.CodigoCliente,
+        (c, p) => new { Cliente = c, Pedido = p })
+    .Join(_context.DetallePedidos,
+        cp => cp.Pedido.Id,
+        dp => dp.Id,
+        (cp, dp) => new { cp.Cliente, cp.Pedido, DetallePedido = dp })
+    .Join(_context.Productos,
+        cpd => cpd.DetallePedido.CodigoProducto,
+        pr => pr.Id,
+        (cpd, pr) => new { cpd.Cliente, cpd.Pedido, cpd.DetallePedido, Producto = pr })
+    .GroupBy(cpdp => new { cpdp.Cliente.Id, cpdp.Cliente.NombreCliente })
+    .Select(group => new
+    {
+        ClienteNombre = group.Key.NombreCliente,
+        GamasCompradas = string.Join(", ", group.Select(cpdp => cpdp.Producto.Gama).Distinct())
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+CONSULTAS MULTITABLA EXTERNA --------------------------------------------
+
+// 1. Clientes sin pagos
+        [HttpGet("CustomersWithOutPayments")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersWithOutPayments()
+        {
+
+            var results = await _context.Clientes
+                .GroupJoin(_context.Pagos,
+                    c => c.Id,
+                    p => p.Id,
+                    (c, pagos) => new { Cliente = c, Pagos = pagos })
+                .Where(cp => !cp.Pagos.Any())
+                .Select(cp => cp.Cliente)
+                .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 2. Clientes sin pedidos
+        [HttpGet("GetQuery")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> GetQuery()
+        {
+
+            var results = await _context.Clientes
+                .GroupJoin(_context.Pedidos,
+                    c => c.Id,
+                    p => p.CodigoCliente,
+                    (c, pedidos) => new { Cliente = c, Pedidos = pedidos })
+                .Where(cp => !cp.Pedidos.Any())
+                .Select(cp => cp.Cliente)
+                .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 3. Clientes sin pagos o pedidos
+        [HttpGet("CustomersWithOutPaymentsOrOrders")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersWithOutPaymentsOrOrders()
+        {
+
+            var results = await _context.Clientes
+                .Where(c => !_context.Pagos.Any(p => p.IdNavigation.Id == c.Id) && !_context.Pedidos.Any(pe => pe.CodigoClienteNavigation.Id == c.Id))
+                .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 4. Empleados sin oficina
+        [HttpGet("EmployeesWithoutOffice")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeesWithoutOffice()
+        {
+
+var results = await _context.Empleados
+    .Where(e => e.CodigoOficina == null)
+    .ToListAsync();
+
+
+            if (results == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(results);
+        }
+
+// 5. Devuelve un listado que muestre solamente los empleados que no tienen un
+cliente asociado.
+
+        [HttpGet("EmployeeWithOutCustomer")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeeWithOutCustomer()
+        {
+
+           var results = await _context.Empleados
+    .Where(e => !e.Clientes.Any())
+    .Select(e => new
+    {
+        NombreEmpleado = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        CodigoEmpleado = e.Id // Puedes ajustar esto según el nombre de la propiedad que representa el código de empleado en tu modelo
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 6. Devuelve un listado que muestre solamente los empleados que no tienen un
+cliente asociado junto con los datos de la oficina donde trabajan.
+        [HttpGet("EmployeeWithOutCustomerAndWithOffice")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeeWithOutCustomerAndWithOffice()
+        {
+
+var results = await _context.Empleados
+    .Where(e => !e.Clientes.Any())
+    .Select(e => new
+    {
+        NombreEmpleado = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        CodigoEmpleado = e.Id, // Ajusta esto según el nombre de la propiedad que representa el código de empleado en tu modelo
+        Oficina = new
+        {
+            Ciudad = e.CodigoOficinaNavigation.Ciudad,
+            Pais = e.CodigoOficinaNavigation.Pais,
+            Region = e.CodigoOficinaNavigation.Region,
+            // Agrega aquí las propiedades adicionales de Oficina que desees incluir en el resultado
+        }
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 7. Empleados sin oficina y sin cliente
+        [HttpGet("EmployeeWithoutOfficeandCustomer")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeeWithoutOfficeandCustomer()
+        {
+
+        var results = await _context.Empleados
+        .Where(e => e.CodigoOficina == null && !e.Clientes.Any())
+        .ToListAsync();
+
+
+            if (results == null){
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 8. Productos sin pedido
+[HttpGet("ProductsWithOutOrders")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> ProductsWithOutOrders()
+        {
+
+        var results = await _context.Productos
+            .Where(p => !p.DetallePedidos.Any())
+            .ToListAsync();
+
+
+            if (results == null){
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 9. Productos sin pedido con detalles
+        [HttpGet("ProductsWithOutOrderWithDetails")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> ProductsWithOutOrderWithDetails()
+        {
+
+            var results = await _context.Productos
+                .Where(p => !p.DetallePedidos.Any())
+                .Select(p => new
+                {
+                    p.Nombre,
+                    p.Descripcion,
+                    p.GamaNavigation.Imagen
+                })
+                .ToListAsync();
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+
+// 10.1 Devuelve las oficinas donde no trabajan ninguno de los empleados que
+hayan sido los representantes de ventas de algún cliente que haya realizado
+la compra de algún producto de la gama Frutales.
+        [HttpGet("OfficesWithEmployeeGammaFrutales")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> OfficesWithEmployeeGammaFrutales()
+        {
+
+            var results = await _context.Oficinas
+    .Where(o => !o.Empleados.Any(e => e.Clientes.Any(c => c.Pedidos.Any(p => p.DetallePedidos.Any(dp => dp.CodigoProductoNavigation.GamaNavigation.Id == "Frutales")))))
+    .ToListAsync();
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 11. . Devuelve un listado con los clientes que han realizado algún pedido pero no
+han realizado ningún pago.
+        [HttpGet("CustomersWithOrderAndWithoutPayments")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersWithOrderAndWithoutPayments()
+        {
+
+           var results = await _context.Clientes
+    .Where(c => c.Pedidos.Any() && !c.Pagos.Any())
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// 12.Devuelve un listado con los datos de los empleados que no tienen clientes
+asociados y el nombre de su jefe asociado.
+        [HttpGet("EmployeeWithOutCustomersWithBoss")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeeWithOutCustomersWithBoss()
+        {
+
+           var results = await _context.Empleados
+    .Where(e => !e.Clientes.Any())
+    .Select(e => new
+    {
+        NombreEmpleado = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        JefeAsociado = e.CodigoJefeNavigation != null ? $"{e.CodigoJefeNavigation.Nombre} {e.CodigoJefeNavigation.Apellido1} {e.CodigoJefeNavigation.Apellido2}" : "Sin jefe"
+    })
+    .ToListAsync();
+
+
+
+            if (results == null)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+
+Consultas Resumen -----------------------------------
+
+// ¿Cuántos empleados hay en la compañía?
+        [HttpGet("EmployeesInTheCompany")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> EmployeesInTheCompany()
+        {
+
+            var results = await _context.Empleados.CountAsync();
+
+            if (results == 0)
+            {
+                return BadRequest();
+            }
+            return Ok(results);
+        }
+
+// ¿Cuántos clientes tiene cada país?
+
+        [HttpGet("CustomersInEachCountry")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersInEachCountry()
+        {
+
+            var results = await _context.Clientes
+                .GroupBy(c => c.Pais)
+                .Select(g => new { Pais = g.Key, CantidadClientes = g.Count() })
+                .ToListAsync();
+
+            return Ok(results);
+        }
+// ¿Cuál fue el pago medio en 2009?
+
+        [HttpGet("2009MostPayment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> 2009MostPayment()
+        {
+
+            var results = await _context.Pagos
+            .Where(p => p.FechaPago.Year == 2009)
+            .AverageAsync(p => p.Total);
+
+            return Ok(results);
+        }
+// ¿Cuántos pedidos hay en cada estado? Ordena el resultado de forma descendente por el número de pedidos.
+
+        [HttpGet("OrderByDesendent")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> OrderByDesendent()
+        {
+
+            var results = await _context.Pedidos
+                .GroupBy(p => p.Estado)
+                .Select(g => new { Estado = g.Key, CantidadPedidos = g.Count() })
+                .OrderByDescending(r => r.CantidadPedidos)
+                .ToListAsync();
+
+
+            return Ok(results);
+        }
+// Calcula el precio de venta del producto más caro y más barato en una misma consulta.
+
+
+var preciosExtremos = await _context.Productos
+    .Select(p => p.PrecioVenta)
+    .AggregateAsync((min, next) => Math.Min(min, next), (max, next) => Math.Max(max, next));
+// Calcula el número de clientes que tiene la empresa.
+
+
+        [HttpGet("CustomerInCompany")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomerInCompany()
+        {
+
+            var results = await _context.Clientes.CountAsync();
+
+            return Ok(results);
+        }
+// ¿Cuántos clientes existen con domicilio en la ciudad de Madrid?
+
+
+        [HttpGet("GetQuery")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> GetQuery()
+        {
+
+            var results = await _context.Clientes
+    .Where(c => c.Ciudad == "Madrid")
+    .CountAsync();
+
+            return Ok(results);
+        }
+// ¿Calcula cuántos clientes tiene cada una de las ciudades que empiezan por M?
+
+        [HttpGet("CustomersInMCities")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersInMCities()
+        {
+
+            
+        var results = await _context.Clientes
+            .Where(c => c.Ciudad.StartsWith("M"))
+            .GroupBy(c => c.Ciudad)
+            .Select(g => new { Ciudad = g.Key, CantidadClientes = g.Count() })
+            .ToListAsync();
+
+            return Ok(results);
+        }
+// Devuelve el nombre de los representantes de ventas y el número de clientes al que atiende cada uno.
+
+        [HttpGet("NumberOfCustomersEmployeesRepresentsOfSells")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> NumberOfCustomersEmployeesRepresentsOfSells()
+        {
+
+            
+var results = await _context.Empleados
+    .Where(e => e.Puesto == "Representante Ventas")
+    .Select(e => new
+    {
+        Representante = $"{e.Nombre} {e.Apellido1} {e.Apellido2}",
+        CantidadClientes = e.Clientes.Count
+    })
+    .ToListAsync();
+
+            return Ok(results);
+        }
+// Calcula el número de clientes que no tiene asignado representante de ventas.
+
+
+        [HttpGet("CustomersWithRepresentOfSells")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> CustomersWithRepresentOfSells()
+        {
+
+            
+var results = await _context.Clientes
+    .Where(c => c.CodigoEmpleadoRepVentas == null)
+    .CountAsync();
+
+            return Ok(results);
+        }
+
+        -------------
+
+// Calcula la fecha del primer y último pago realizado por cada uno de los clientes. El listado deberá mostrar el nombre y los apellidos de cada cliente.
+
+var fechasPagosClientes = await _context.Clientes
+    .Select(c => new
+    {
+        Cliente = $"{c.NombreCliente} {c.NombreContacto} {c.ApellidoContacto}",
+        PrimerPago = c.Pagos.Min(p => p.FechaPago),
+        UltimoPago = c.Pagos.Max(p => p.FechaPago)
+    })
+    .ToListAsync();
+
+// Calcula el número de productos diferentes que hay en cada uno de los pedidos.
+
+var productosPorPedido = await _context.Pedidos
+    .Select(p => new
+    {
+        CodigoPedido = p.Id,
+        NumeroProductos = p.DetallePedidos.Select(dp => dp.CodigoProducto).Distinct().Count()
+    })
+    .ToListAsync();
+// Calcula la suma de la cantidad total de todos los productos que aparecen en cada uno de los pedidos.
+
+
+        [HttpGet("NumbersOfProductsInEachOrder")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> GetQuery(NumbersOfProductsInEachOrder)
+        {
+
+var results = await _context.Pedidos
+    .Select(p => new
+    {
+        CodigoPedido = p.Id,
+        NumeroProductos = p.DetallePedidos.Select(dp => dp.CodigoProducto).Distinct().Count()
+    })
+    .ToListAsync();
+
+            return Ok(results);
+        }
+// Devuelve un listado de los 20 productos más vendidos y el número total de unidades que se han vendido de cada uno. El listado deberá estar ordenado por el número total de unidades vendidas.
+
+        [HttpGet("Top20MostSellerProducts")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> Top20MostSellerProducts()
+        {
+
+var results = await _context.Productos
+    .OrderByDescending(p => p.DetallePedidos.Sum(dp => dp.Cantidad))
+    .Take(20)
+    .Select(p => new
+    {
+        NombreProducto = p.Nombre,
+        UnidadesVendidas = p.DetallePedidos.Sum(dp => dp.Cantidad)
+    })
+    .ToListAsync();
+            // if(results == false){
+            //     return BadRequest();
+            // }
+
+            return Ok(results);
+        }
+// La facturación que ha tenido la empresa en toda la historia, indicando la base imponible, el IVA y el total facturado.
+
+var facturacionTotal = await _context.DetallePedidos
+    .GroupBy(dp => dp.CodigoProducto)
+    .Select(g => new
+    {
+        CodigoProducto = g.Key,
+        BaseImponible = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad),
+        IVA = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 0.21,
+        TotalFacturado = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 1.21
+    })
+    .ToListAsync(); // --------- falta
+// La misma información que en la pregunta anterior, pero agrupada por código de producto.
+
+var facturacionPorProducto = await _context.DetallePedidos
+    .GroupBy(dp => dp.CodigoProducto)
+    .Select(g => new
+    {
+        CodigoProducto = g.Key,
+        BaseImponible = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad),
+        IVA = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 0.21,
+        TotalFacturado = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 1.21
+    })
+    .ToListAsync(); // ---------- falta
+// La misma información que en la pregunta anterior, pero agrupada por código de producto filtrada por los códigos que empiecen por OR.
+
+var facturacionPorProductoFiltrado = await _context.DetallePedidos
+    .Where(dp => dp.CodigoProducto.StartsWith("OR"))
+    .GroupBy(dp => dp.CodigoProducto)
+    .Select(g => new
+    {
+        CodigoProducto = g.Key,
+        BaseImponible = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad),
+        IVA = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 0.21,
+        TotalFacturado = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 1.21
+    })
+    .ToListAsync(); // ------ falta
+// Lista las ventas totales de los productos que hayan facturado más de 3000 euros. Se mostrará el nombre, unidades vendidas, total facturado y total facturado con impuestos (21% IVA).
+
+var ventasTotalesMas3000 = await _context.DetallePedidos
+    .GroupBy(dp => dp.CodigoProducto)
+    .Where(g => g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) > 3000)
+    .Select(g => new
+    {
+        NombreProducto = g.KeyNavigation.Nombre,
+        UnidadesVendidas = g.Sum(dp => dp.Cantidad),
+        TotalFacturado = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad),
+        TotalFacturadoConIVA = g.Sum(dp => dp.Cantidad * dp.PrecioUnidad) * 1.21
+    })
+    .ToListAsync();
+// Muestra la suma total de todos los pagos que se realizaron para cada uno de los años que aparecen en la tabla pagos.
+
+        [HttpGet("PaysForEachYear")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public async Task<ActionResult<string>> PaysForEachYear()
+        {
+
+var results = await _context.Pagos
+    .GroupBy(p => p.FechaPago.Year)
+    .Select(g => new
+    {
+        Año = g.Key,
+        SumaTotalPagos = g.Sum(p => p.Total)
+    })
+    .ToListAsync();
+            // if(results == false){
+            //     return BadRequest();
+            // }
+
+            return Ok(results);
+        }
